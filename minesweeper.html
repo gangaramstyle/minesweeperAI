@@ -1,0 +1,165 @@
+<html>
+	<head>
+		<title>MineSweeper</title>
+		<style>
+			.cell {background-color: rgba(0, 0, 0, 0.8); font-family: 'HelveticaNeue-Light'; color: white; font-size: 40px; text-align: center;}
+			.cell:hover {background-color: rgba(100, 100, 100, 0.8);}
+		</style>
+
+		<script>
+
+			window.row_total;
+			window.col_total;
+			window.bomb_total;
+			window.board = [];
+
+			function range(start, end) {
+				var arr = [];
+				for(var i = start; i < end; i++) {
+					arr.push(i);
+				}
+				return arr;
+			}
+
+			function generateBoard() {
+				var cellSize = 50;
+
+				window.row_total = document.getElementById('rowNum').value;
+				window.col_total = document.getElementById('colNum').value;
+				window.bomb_total = document.getElementById('bombNum').value;
+				var boardContainer = document.getElementById('board');
+
+				//Generate html board layout
+				var cellNum = 0
+				for (var row=0; row<window.row_total; row++) {
+					for (var col=0; col<window.col_total; col++) {
+						var newCell = document.createElement('div');
+						newCell.setAttribute('id', 'pos_'+cellNum);
+						newCell.setAttribute('class', 'cell');
+						newCell.setAttribute('onclick', 'clickCell(this)')
+						newCell.style.position = "absolute";
+						newCell.style.top = 200 + cellSize*row + row;
+						newCell.style.left = cellSize*col + col;
+						newCell.style.width = cellSize;
+						newCell.style.height = cellSize;
+						boardContainer.appendChild(newCell);
+						cellNum++;
+					}
+				}
+			}
+
+			function surroundingCellList(cellPos, row_total, col_total) {
+				var surroundingCellList = [];
+
+				var leftTopConflict = false;
+				var leftMidConflict = false;
+				var leftBotConflict = false;
+				var rightTopConflict = false;
+				var rightMidConflict = false;
+				var rightBotConflict = false;
+				var centerTopConflict = false;
+				var centerBotConflict = false;
+
+				if (cellPos % col_total == 0) {leftTopConflict=true; leftMidConflict=true; leftBotConflict=true;}
+
+				if (cellPos % col_total == col_total-1) {rightTopConflict=true; rightMidConflict=true; rightBotConflict=true;}
+
+				if (Math.floor(cellPos/col_total) == 0) {leftTopConflict=true; centerTopConflict=true; rightTopConflict=true;}
+
+				if (Math.floor(cellPos/col_total) == row_total-1) {leftBotConflict=true; centerBotConflict=true; rightBotConflict=true;}
+
+				if (!leftTopConflict) {surroundingCellList.push(cellPos - col_total - 1);}
+				if (!centerTopConflict) {surroundingCellList.push(cellPos - col_total);}
+				if (!rightTopConflict) {surroundingCellList.push(cellPos - col_total + 1);}
+				if (!leftMidConflict) {surroundingCellList.push(cellPos - 1);}
+				if (!rightMidConflict) {surroundingCellList.push(cellPos + 1);}
+				if (!leftBotConflict) {surroundingCellList.push(cellPos + parseInt(col_total) - 1);}
+				if (!centerBotConflict) {surroundingCellList.push(cellPos + parseInt(col_total));}
+				if (!rightBotConflict) {surroundingCellList.push(cellPos + parseInt(col_total) + 1);}
+
+				return surroundingCellList;
+
+			}
+
+			function generateMineField(row_total, col_total, bomb_total, firstClick) {
+
+				var noBombCells = surroundingCellList(firstClick, row_total, col_total);
+				noBombCells.push(firstClick);
+
+				var bombPossList = range(0, window.row_total*window.col_total);
+				for (var i = 0; i < noBombCells.length; i++) {
+					//remove cells you don't want bombs in from bomb possibility list
+					bombPossList.splice(bombPossList.indexOf(noBombCells[i]), 1);
+				}
+
+
+				if (bombPossList.length > bomb_total) {
+					// add error in case of too many bombs
+					var bombList = [];
+					for (var i = 0; i < window.bomb_total; i++) {
+						var loc = Math.floor(Math.random()*bombPossList.length);
+						var bombLoc = bombPossList[loc];
+						bombPossList.splice(loc, 1);
+						bombList.push(bombLoc);
+					}
+
+					window.board = new Array(row_total*col_total);
+					for (var i = 0; i < window.board.length; i++) {
+						window.board[i] = "0";
+					}
+
+					for (var i = 0; i < bombList.length; i++) {
+						window.board[bombList[i]] = "X";
+						var surroundingBomb = surroundingCellList(bombList[i], row_total, col_total);
+						for (var n = 0; n < surroundingBomb.length; n++) {
+							if (window.board[surroundingBomb[n]] != "X") {
+								window.board[surroundingBomb[n]]++;
+							}
+						}
+					}
+				}
+			}
+
+			function clickCell(e) {
+				var cellID = e.id.split("_");
+				if (window.board.length == 0) {
+					generateMineField(window.row_total, window.col_total, window.bomb_total, parseInt(cellID[1]));
+				}
+				var cellValue = window.board[parseInt(cellID[1])];
+				if (cellValue == 'X') {
+					alert('Game Over');
+					e.style.backgroundColor = "rgba(30, 30, 30, 0.8)";
+					e.innerHTML = cellValue;
+				} else if (cellValue == 0) {
+					e.style.backgroundColor = "rgba(30, 30, 30, 0.8)";
+					e.innerHTML = " ";
+					var surroundingClicked = surroundingCellList(parseInt(cellID[1]), window.row_total, window.col_total);
+
+					for (var i = 0; i < surroundingClicked.length; i++) {
+						var cellToClick = document.getElementById('pos_' + surroundingClicked[i]);
+						if (cellToClick.innerHTML == "") {
+							clickCell(cellToClick);	
+						}
+					}
+				} else {
+					e.style.backgroundColor = "rgba(30, 30, 30, 0.8)";
+					e.innerHTML = cellValue;
+				}
+				return;
+			}
+		</script>
+
+
+	</head>
+	<body>
+		<form>
+			Number of rows: <input type="text" id="rowNum"><br>
+			Number of columns: <input type="text" id="colNum"><br>
+			Number of bombs: <input type="text" id="bombNum"><br>
+			<input type="button" onclick="generateBoard()" value="Generate">
+		</form>
+
+		<div id="board">
+		</div>
+	</body>
+</html>

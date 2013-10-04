@@ -31,6 +31,9 @@
 
 				//Generate html board layout
 				var cellNum = 0
+				boardLocTop = (window.innerHeight - cellSize*window.row_total - window.row_total)/2;
+				boardLocLeft = (window.innerWidth- cellSize*window.col_total - window.col_total)/2;
+
 				for (var row=0; row<window.row_total; row++) {
 					for (var col=0; col<window.col_total; col++) {
 						var newCell = document.createElement('div');
@@ -38,8 +41,8 @@
 						newCell.setAttribute('class', 'cell');
 						newCell.setAttribute('onclick', 'clickCell(this)')
 						newCell.style.position = "absolute";
-						newCell.style.top = 200 + cellSize*row + row;
-						newCell.style.left = cellSize*col + col;
+						newCell.style.top = boardLocTop + cellSize*row + row;
+						newCell.style.left = boardLocLeft + cellSize*col + col;
 						newCell.style.width = cellSize;
 						newCell.style.height = cellSize;
 						boardContainer.appendChild(newCell);
@@ -147,11 +150,27 @@
 				}
 				return;
 			}
+
+			function handleResize() {
+				var cellSize = 50;
+
+				boardLocTop = (window.innerHeight - cellSize*window.row_total - window.row_total)/2;
+				boardLocLeft = (window.innerWidth- cellSize*window.col_total - window.col_total)/2;
+
+				for (var i=0; i < window.row_total*window.col_total; i++) {
+					var cell = document.getElementById('pos_' + i);
+					var row = Math.floor(i/window.col_total);
+					var col = i%window.col_total;
+					cell.style.top = boardLocTop + cellSize*row + row;
+					cell.style.left = boardLocLeft + cellSize*col + col;
+				}
+			}
+
 		</script>
 
 
 	</head>
-	<body background="http://fc03.deviantart.net/fs71/f/2010/307/5/8/japanese_maple_leaf_wp_2010_by_windylife-d322fnk.jpg">
+	<body onresize="handleResize()" background="http://fc03.deviantart.net/fs71/f/2010/307/5/8/japanese_maple_leaf_wp_2010_by_windylife-d322fnk.jpg">
 		<form>
 			Number of rows: <input type="text" id="rowNum"><br>
 			Number of columns: <input type="text" id="colNum"><br>

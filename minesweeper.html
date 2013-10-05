@@ -132,7 +132,7 @@
 				if (cellValue == 'X') {
 					alert('Game Over');
 					e.style.backgroundColor = "rgba(30, 30, 30, 0.8)";
-					e.style.color = "rgba(0, 200, 0, 1)";
+					e.style.color = "rgba(175, 0, 0, 1)";
 					e.innerHTML = cellValue;
 				} else if (cellValue == 0) {
 					e.style.backgroundColor = "rgba(30, 30, 30, 0.8)";
@@ -167,6 +167,56 @@
 				}
 			}
 
+
+
+			function AI() {
+
+				clickCell(document.getElementById('pos_' + 1));
+
+				for (var i=0; i < window.row_total*window.col_total; i++) {
+
+					var surroundingCells = surroundingCellList(i, window.row_total, window.col_total);
+					var unclearedCells = [];
+					for (var n=0; n<surroundingCells.length; n++) {
+						var cell = surroundingCells[n];
+						if (document.getElementById('pos_'+cell).innerHTML == "" || document.getElementById('pos_'+cell).innerHTML == "F") {
+							unclearedCells.push(cell);
+						}
+					}
+
+					if (unclearedCells.length == document.getElementById('pos_'+i).innerHTML && unclearedCells.length != 0) {
+						for (var n=0; n<unclearedCells.length; n++) {
+							document.getElementById('pos_'+unclearedCells[n]).innerHTML = "F";
+						}
+					}
+				}
+
+				for (var i=0; i < window.row_total*window.col_total; i++) {
+
+					var surroundingCells = surroundingCellList(i, window.row_total, window.col_total);
+					var unclickedCells = [];
+					var flagCount = 0;
+
+					for (var n=0; n<surroundingCells.length; n++) {
+						var cell = surroundingCells[n];
+						if (document.getElementById('pos_'+cell).innerHTML == "F") {
+							flagCount++;
+						} 
+						if (document.getElementById('pos_'+cell).innerHTML == "") {
+							unclickedCells.push(cell);
+						}
+					}
+
+					if (flagCount == document.getElementById('pos_'+i).innerHTML && flagCount != 0) {
+						for (var n=0; n<unclickedCells.length; n++) {
+							clickCell(document.getElementById('pos_'+unclickedCells[n]));
+						}
+					}
+				}
+
+
+			}
+
 		</script>
 
 
@@ -177,6 +227,7 @@
 			Number of columns: <input type="text" id="colNum"><br>
 			Number of bombs: <input type="text" id="bombNum"><br>
 			<input type="button" onclick="generateBoard()" value="Generate">
+			<input type="button" onclick="AI()" value="AI">
 		</form>
 
 		<div id="board">

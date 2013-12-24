@@ -8,12 +8,15 @@
 
 		<script>
 
-			window.row_total;
-			window.col_total;
-			window.bomb_total;
-			window.masterBoard = [];
-			window.playerBoard = [];
+			var row_total;
+			var col_total;
+			var bomb_total;
+			var masterBoard = [];
+			var playerBoard = [];
 
+			var cellSize = 50;
+
+			//helper functions - no extra dependencies
 			function range(start, end) {
 				var arr = [];
 				for(var i = start; i < end; i++) {
@@ -22,18 +25,23 @@
 				return arr;
 			}
 
-			function generateBoard() {
-				var cellSize = 50;
 
-				window.row_total = document.getElementById('rowNum').value;
-				window.col_total = document.getElementById('colNum').value;
-				window.bomb_total = document.getElementById('bombNum').value;
+
+
+			// function generates an empty board in the HTML (does not create the data structure that contains board data)
+			function generateBoard() {
+				// Get values from page input
+				row_total = document.getElementById('rowNum').value;
+				col_total = document.getElementById('colNum').value;
+				bomb_total = document.getElementById('bombNum').value;
+
+				// Get board container div
 				var boardContainer = document.getElementById('board');
 
 				//Generate html board layout
 				var cellNum = 0
-				boardLocTop = (window.innerHeight - cellSize*window.row_total - window.row_total)/2;
-				boardLocLeft = (window.innerWidth- cellSize*window.col_total - window.col_total)/2;
+				boardLocTop = (window.innerHeight - (cellSize-1)*row_total)/2;
+				boardLocLeft = (window.innerWidth- (cellSize-1)*col_total)/2;
 
 				window.playerBoard = new Array(window.row_total*window.col_total);
 				for (var i=0; i<window.playerBoard.length; i++) {
@@ -57,7 +65,7 @@
 				}
 			}
 
-			//MAKE GENERAL//
+			//returns list of integer positions of surrounding cells
 			function surroundingCellList(cellPos, row_total, col_total) {
 				var surroundingCellList = [];
 
@@ -91,12 +99,13 @@
 
 			}
 
+			//Generate minefield
 			function generateMineField(row_total, col_total, bomb_total, firstClick) {
 
 				var noBombCells = surroundingCellList(firstClick, row_total, col_total);
 				noBombCells.push(firstClick);
 
-				var bombPossList = range(0, window.row_total*window.col_total);
+				var bombPossList = range(0, row_total*col_total);
 				for (var i = 0; i < noBombCells.length; i++) {
 					//remove cells you don't want bombs in from bomb possibility list
 					bombPossList.splice(bombPossList.indexOf(noBombCells[i]), 1);
@@ -104,7 +113,7 @@
 
 
 				if (bombPossList.length > bomb_total) {
-					// add error in case of too many bombs
+					// TODO add error in case of too many bombs
 					var bombList = [];
 					for (var i = 0; i < window.bomb_total; i++) {
 						var loc = Math.floor(Math.random()*bombPossList.length);
@@ -113,17 +122,17 @@
 						bombList.push(bombLoc);
 					}
 
-					window.masterBoard = new Array(row_total*col_total);
-					for (var i = 0; i < window.masterBoard.length; i++) {
-						window.masterBoard[i] = "0";
+					masterBoard = new Array(row_total*col_total);
+					for (var i = 0; i < masterBoard.length; i++) {
+						masterBoard[i] = "0";
 					}
 
 					for (var i = 0; i < bombList.length; i++) {
-						window.masterBoard[bombList[i]] = "X";
+						masterBoard[bombList[i]] = "X";
 						var surroundingBomb = surroundingCellList(bombList[i], row_total, col_total);
 						for (var n = 0; n < surroundingBomb.length; n++) {
-							if (window.masterBoard[surroundingBomb[n]] != "X") {
-								window.masterBoard[surroundingBomb[n]]++;
+							if (masterBoard[surroundingBomb[n]] != "X") {
+								masterBoard[surroundingBomb[n]]++;
 							}
 						}
 					}
@@ -132,21 +141,24 @@
 
 			function clickCell(e) {
 				var cellID = e.id.split("_");
-				if (window.masterBoard.length == 0) {
-					generateMineField(window.row_total, window.col_total, window.bomb_total, parseInt(cellID[1]));
+
+				// if board hasn't been created
+				if (masterBoard.length == 0) {
+					generateMineField(row_total, col_total, bomb_total, parseInt(cellID[1]));
 				}
-				var cellValue = window.masterBoard[parseInt(cellID[1])];
+
+				var cellValue = masterBoard[parseInt(cellID[1])];
 				if (cellValue == 'X') {
 					alert('Game Over');
 					e.style.backgroundColor = "rgba(30, 30, 30, 0.8)";
 					e.style.color = "rgba(175, 0, 0, 1)";
-					window.playerBoard[parseInt(cellID[1])] = cellValue;
-					e.innerHTML = cellValue; /*change this ***************************************************************/
+					playerBoard[parseInt(cellID[1])] = cellValue;
+					e.innerHTML = cellValue;
 				} else if (cellValue == 0) {
 					e.style.backgroundColor = "rgba(30, 30, 30, 0.8)";
-					window.playerBoard[parseInt(cellID[1])] = " ";
-					e.innerHTML = " "; /*change this *********************************************************************/
-					var surroundingClicked = surroundingCellList(parseInt(cellID[1]), window.row_total, window.col_total);
+					playerBoard[parseInt(cellID[1])] = " ";
+					e.innerHTML = " ";
+					var surroundingClicked = surroundingCellList(parseInt(cellID[1]), row_total, col_total);
 
 					for (var i = 0; i < surroundingClicked.length; i++) {
 						var cellToClick = document.getElementById('pos_' + surroundingClicked[i]);
@@ -156,10 +168,16 @@
 					}
 				} else {
 					e.style.backgroundColor = "rgba(30, 30, 30, 0.8)";
-					window.playerBoard[parseInt(cellID[1])] = cellValue;
-					e.innerHTML = cellValue; /*change this ***************************************************************/
+					playerBoard[parseInt(cellID[1])] = cellValue;
+					e.innerHTML = cellValue;
 				}
 				return;
+			}
+
+			function flagCell(e) {
+				var cellID = e.id.split("_");
+				window.playerBoard[parseInt(cellID[1])] = cellValue;
+				e.innerHTML = "F"
 			}
 
 			function handleResize() {
@@ -178,24 +196,40 @@
 			}
 
 			
-			function AIrule1() {
+			function AIrule1(recursiveBoard) {
 				var boardChanged = false;
-				for (var i=0; i < window.row_total*window.col_total; i++) {
+				if ('undefined' === typeof recursiveBoard) {
+					playingOnPhysicalBoard = true;
+					board = playerBoard;
+				} else {
+					playingOnPhysicalBoard = false;
+					board = recursiveBoard;
+				}
 
-					var surroundingCells = surroundingCellList(i, window.row_total, window.col_total);
+				for (var i=0; i < row_total*col_total; i++) {
+
+					var surroundingCells = surroundingCellList(i, row_total, col_total);
 					var unclearedCells = [];
 					for (var n=0; n<surroundingCells.length; n++) {
 						var cell = surroundingCells[n];
-						if (document.getElementById('pos_'+cell).innerHTML == "" || document.getElementById('pos_'+cell).innerHTML == "F") {
+						if (board[cell] == "" || board[cell] == "F") {
+						//if (document.getElementById('pos_'+cell).innerHTML == "" || document.getElementById('pos_'+cell).innerHTML == "F") {
 							unclearedCells.push(cell);
 						}
 					}
 
-					if (unclearedCells.length == document.getElementById('pos_'+i).innerHTML && unclearedCells.length != 0) {
+					if (unclearedCells.length == board[i] && unclearedCells.length != 0) {
 						for (var n=0; n<unclearedCells.length; n++) {
-							if (document.getElementById('pos_'+unclearedCells[n]).innerHTML == "") {
-								window.playerBoard[unclearedCells[n]] = "F";
-								document.getElementById('pos_'+unclearedCells[n]).innerHTML = "F"; //change this /&&&&&&&&&&&&&&&&&&&&&&&&&&&&//
+							if (board[unclearedCells[n]] == "") {
+								
+								if (playingOnPhysicalBoard) {
+									board[unclearedCells[n]] = "F";
+									document.getElementById('pos_'+unclearedCells[n]).innerHTML = "F";
+								} else {
+									board[unclearedCells[n]] = "F";
+									//make more efficient, implement dictionary of changes
+								}
+							
 								boardChanged = true;
 							}
 						}
@@ -204,48 +238,47 @@
 				return boardChanged;
 			}
 			
-			function AIrule2() {
+			function AIrule2(recursiveBoard) {
 				var boardChanged = false;
-				for (var i=0; i < window.row_total*window.col_total; i++) {
+				if ('undefined' === typeof recursiveBoard) {
+					playingOnPhysicalBoard = true;
+					board = playerBoard;
+				} else {
+					playingOnPhysicalBoard = false;
+					board = recursiveBoard;
+				}
 
+
+				for (var i=0; i < window.row_total*window.col_total; i++) {
 					var surroundingCells = surroundingCellList(i, window.row_total, window.col_total);
 					var unclickedCells = [];
 					var flagCount = 0;
 
 					for (var n=0; n<surroundingCells.length; n++) {
 						var cell = surroundingCells[n];
-						if (document.getElementById('pos_'+cell).innerHTML == "F") {
+						if (board[cell] == "F") {
 							flagCount++;
 						} 
-						if (document.getElementById('pos_'+cell).innerHTML == "") {
+						if (board[cell] == "") {
 							unclickedCells.push(cell);
 						}
 					}
 
-					if (flagCount == document.getElementById('pos_'+i).innerHTML && flagCount != 0) {
+					if (flagCount == board[i] && flagCount != 0) {
 						for (var n=0; n<unclickedCells.length; n++) {
-							clickCell(document.getElementById('pos_'+unclickedCells[n]));
-							boardChanged = true;
+							if (playingOnPhysicalBoard) {
+								clickCell(document.getElementById('pos_'+unclickedCells[n]));
+								boardChanged = true;
+							} else {
+								recursiveBoard[unclickedCells[n]] = "C";
+								//make more efficient, implement dictionary of changes
+							}
+
 						}
 					}
 				}
 				return boardChanged;
 			} 
-
-
-			function isCellOnEdge(cellID) {
-				if (window.playerBoard[cellID] != "" && window.playerBoard[cellID] != "F" && window.playerBoard[cellID] != " ") {
-					var surroundingCells = surroundingCellList(cellID, window.row_total, window.col_total);
-					var unclearedCells = 0;
-
-					for (var n=0; n<surroundingCells.length; n++) {
-						if (window.playerBoard[surroundingCells[n]] == "") {
-							return true;
-						}
-					}
-					return false;
-				}
-			}
 
 			function choose(n, k) {
 				var result = 1;
@@ -280,58 +313,83 @@
 				return spaceNum;
 			}
 			
+			function setCombination(numBombs, listOfSpaces, choice, choiceList) {
+				if (numBombs==0) {
+					choiceList.push(choice);
+					return;
+				}
+				for (var i=0; i <= listOfSpaces.length - numBombs; i++) {
+					setCombination(numBombs-1, listOfSpaces.slice(i+1), choice.concat(listOfSpaces[i]), choiceList);
+				}
+			}
 			
+			function boardDiff(listOfBoards) {
+				var listOfActions = []
+				for (var cell = 0; cell < listOfBoards[0].length; cell++) {
+					var value = listOfBoards[0][cell];
+					var noChange = true;
+					for (var board=1; board < listOfBoards.length; board++) {
+						if (value != listOfBoards[board][cell]) {
+							noChange = false;
+						}
+					}
+					if (noChange) {
+						listOfActions.push([cell, value]);
+					}
+				}
+				return listOfActions;
+			}
+
 			function AIrule3() {
 				var currentBoard = window.playerBoard;
 
 				for (var i=0; i < window.row_total*window.col_total; i++) {
-
-					var surroundingCells = surroundingCellList(i, window.row_total, window.col_total);
-					var unclearedCells = [];
-					var numFoundBombs = 0;
-					for (var n=0; n<surroundingCells.length; n++) {
-						var cell = surroundingCells[n];
-						if (document.getElementById('pos_'+cell).innerHTML == "F") {
-							numFoundBombs++;
-						}
-						else if (document.getElementById('pos_'+cell).innerHTML == "") {
-							unclearedCells.push(cell);
-						}
-					}
 
 					var flagNum = adjacentFlags(i, currentBoard);
 					var spaceNum = adjacentSpaces(i, currentBoard);
 					var numPossibilities = choose(spaceNum, currentBoard[i]-flagNum);
 					//alert(numPossibilities);
 
-					if (numPossibilities == 2) {
-						alert(i);
-						/*
-						for (var n=0; n<unclearedCells.length; n++) {
-							if (document.getElementById('pos_'+unclearedCells[n]).innerHTML == "") {
-								window.playerBoard[unclearedCells[n]] = "F";
-								document.getElementById('pos_'+unclearedCells[n]).innerHTML = "F"; //change this /&&&&&&&&&&&&&&&&&&&&&&&&&&&&//
-								boardChanged = true;
+					if (numPossibilities > 1 && numPossibilities < 4) {
+						alert('making a guess at ' + i);
+
+						var surroundingCells = surroundingCellList(i, row_total, col_total);
+						var unclearedCells = [];
+						for (var n=0; n<surroundingCells.length; n++) {
+							var cell = surroundingCells[n];
+							if (document.getElementById('pos_'+cell).innerHTML == "") {
+								unclearedCells.push(cell);
 							}
-						} */
-					}
-				}
-				return boardChanged;
-
-				for (var i=0; i < window.row_total*window.col_total; i++) {
-					if (isCellOnEdge(i)) {
-
-						var flagNum = adjacentFlags(i, currentBoard);
-						var spaceNum = adjacentSpaces(i, currentBoard);
-						var numPossibilities = choose(spaceNum, currentBoard[i]-flagNum);
-
-						possibleBoards = [];
-
-						for (var i=0; i < numPossibilities; i++){
-							generateBoard
 						}
 
+						var bombCombos = [];
+						setCombination(currentBoard[i]-flagNum, unclearedCells, [], bombCombos);
+						var listOfBoards = [];
+						for (var optionNum=0; optionNum < bombCombos.length; optionNum++) {
+							var boardOption = playerBoard.slice(0);
+							boardOption[bombCombos[optionNum]] = "F";
 
+							AIrule1(boardOption);
+							AIrule2(boardOption);
+							AIrule1(boardOption);
+							AIrule2(boardOption);
+							AIrule1(boardOption);
+							AIrule2(boardOption);
+
+							console.log(boardOption);
+							listOfBoards.push(boardOption);
+						}
+						var actions = boardDiff(listOfBoards);
+						for (var action = 0; action<actions.length; action++) {
+							if (actions[action][1] == "C") {
+								clickCell(document.getElementById('pos_' + actions[action][0]));
+							} else if (actions[action][1] == "F") {
+								currentBoard[actions[action][0]] = "F";
+								document.getElementById('pos_'+actions[action][0]).innerHTML = "F";
+							}
+						}
+
+						
 					}
 				}
 			}

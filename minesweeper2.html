@@ -419,6 +419,11 @@
 				}
 			}
 
+			function clearBoard() {
+				document.getElementById('board').innerHTML = "";
+			}
+			
+
 		</script>
 
 
@@ -430,7 +435,7 @@
 			Number of bombs: <input type="text" id="bombNum"><br>
 			<input type="button" onclick="generateBoard()" value="Generate">
 			<input type="button" onclick="AI()" value="AI">
-			<span class="glyphicon glyphicon-cog"></span>
+			<input type="button" onclick="clearBoard()" value="Clear"></span>
 		</form>
 
 		<div id="board">
